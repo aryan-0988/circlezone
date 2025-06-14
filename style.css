@@ -1,0 +1,144 @@
+* {
+  margin: 0;
+  padding: 0;
+  font-family: 'Courier New', Courier, monospace;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #333446;
+}
+
+.box {
+  width: 400px;
+  height: 460px;
+  position: relative;
+  background-color: #7F8CAA;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.box::before,
+.box::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: -50%;
+  left: -50px;
+  background: linear-gradient(0deg, transparent, transparent, #4300FF, #4300FF);
+  animation: animate 6s linear infinite;
+  transform-origin: bottom right;
+}
+
+.box::after {
+  animation-delay: -3s;
+  z-index: 1;
+}
+
+.borderLine::before,
+.borderLine::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: -50%;
+  left: -50px;
+  background: linear-gradient(0deg, transparent, transparent, #00FFDE, #00FFDE);
+  animation: animate 6s linear infinite;
+  transform-origin: bottom right;
+  z-index: 1;
+}
+
+.borderLine::after {
+  animation-delay: -4.5s;
+}
+
+@keyframes animate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.box form {
+  position: absolute;
+  inset: 4px;
+  background-color: #7F8CAA;
+  border-radius: 10px;
+  padding: 50px 60px;
+  z-index: 2;
+}
+
+.box form h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: white;
+  letter-spacing: 1px;
+  font-weight: 900;
+  font-size: 26px;
+}
+
+.text {
+  margin-top: 20px;
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  height: 42px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  padding: 0 10px;
+  margin-bottom: 15px;
+  letter-spacing: 0.8px;
+  background-color: #ffffff;
+  color: #000000;
+  border-radius: 4px;
+  transition: 0.3s ease;
+  box-shadow: none;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+  background-color: #ffffff;
+  box-shadow: 0 0 6px #00FFDE;
+  color: #000000;
+}
+
+input::placeholder {
+  color: #666;
+}
+
+.show-password {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  color: white;
+  font-size: 14px;
+}
+
+.show-password input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  border-radius: 40px;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  background-color: #EAEFEF;
+  transition: 0.2s;
+}
+
+button:hover {
+  background-color: #cfd3d3;
+}
