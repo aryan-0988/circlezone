@@ -26,7 +26,15 @@ app.use(session({
 }));
 
 // Load user data
-const users = JSON.parse(fs.readFileSync("users.json", "utf-8")); // { "username": "hashed_password", ... }
+// Load user data
+const rawUsers = JSON.parse(fs.readFileSync("users.json", "utf-8"));
+// Transform the array of user objects into a map/dictionary for easy lookup
+const users = rawUsers.reduce((acc, user) => {
+    acc[user.username] = user.password;
+    return acc;
+}, {});
+console.log("✅ Users loaded successfully and mapped for lookup.");
+// console.log("Mapped users:", users); // Optional: uncomment for debugging
 console.log("✅ Users loaded successfully"); // Add this to confirm users.json is read
 
 // Serve index.html
