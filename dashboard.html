@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Welcome to CircleZone</title>
+  <title>Dashboard | CircleZone</title>
   <style>
     body {
       background: #1d1f27;
@@ -12,47 +12,104 @@
       text-align: center;
       padding: 60px 20px;
     }
-
     h1 {
       color: #00ffde;
       font-size: 36px;
       margin-bottom: 20px;
     }
-
-    p {
-      font-size: 18px;
-      margin-bottom: 40px;
-    }
-
-    a {
+    .link-list a {
+      display: block;
       color: #00ffde;
       text-decoration: none;
       font-weight: bold;
-      font-size: 18px;
-      display: inline-block;
       margin: 10px 0;
-      transition: color 0.3s;
     }
-
-    a:hover {
+    .link-list a:hover {
       color: #00bfa6;
     }
-
-    .box {
-      background-color: #2a2c39;
-      padding: 30px;
-      border-radius: 12px;
-      display: inline-block;
+    form {
+      margin-top: 40px;
+    }
+    input[type="text"] {
+      padding: 8px;
+      width: 200px;
+      margin: 5px;
+      border-radius: 6px;
+      border: none;
+    }
+    button {
+      padding: 8px 16px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 6px;
+      background-color: #00ffde;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #00bfa6;
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>Welcome to CircleZone!</h1>
-    <p>You have successfully logged in. Choose a link below:</p>
-    <a href="https://www.google.com" target="_blank">🌐 Google</a><br>
-    <a href="https://www.wikipedia.org" target="_blank">📘 Wikipedia</a><br>
-    <a href="https://github.com" target="_blank">💻 GitHub</a>
-  </div>
+  <h1>Welcome to CircleZone!</h1>
+  <p>Here are your links:</p>
+  <div class="link-list" id="linkList"></div>
+
+  <form id="addLinkForm">
+    <input type="text" id="title" placeholder="Title" required />
+    <input type="text" id="url" placeholder="URL (https://...)" required />
+    <br />
+    <button type="submit">Add Link</button>
+  </form>
+
+  <script>
+    // Get current username from sessionStorage (set during login)
+    const username = sessionStorage.getItem('loggedInUser');
+
+    if (!username) {
+      document.body.innerHTML = "<h2>⚠️ You must log in first.</h2>";
+      throw new Error("User not logged in.");
+    }
+
+    async function loadLinks() {
+      const res = await fetch(`/links/${username}`);
+      const links = await res.json();
+      const list = document.getElementById("linkList");
+      list.innerHTML = "";
+      links.forEach(link => {
+        const a = document.createElement("a");
+        a.href = link.url;
+        a.target = "_blank";
+        a.innerText = link.title;
+        list.appendChild(a);
+      });
+    }
+
+    document.getElementById("addLinkForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const title = document.getElementById("title").value;
+      const url = document.getElementById("url").value;
+
+      const res = await fetch(`/links/${username}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ title, url })
+      });
+
+      if (res.ok) {
+        document.getElementById("title").value = "";
+        document.getElementById("url").value = "";
+        loadLinks();
+      } else {
+        alert("❌ Failed to add link.");
+      }
+    });
+
+    loadLinks();
+  </script>
 </body>
 </html>

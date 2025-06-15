@@ -9,49 +9,36 @@ const PORT = 3000;
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname))); // Serve static files like index.html, css, js
+app.use(express.static(path.join(__dirname)));
 
-// Load users from users.json
-let users;
-try {
+// Load users from JSON
+function loadUsers() {
   const data = fs.readFileSync(path.join(__dirname, "users.json"), "utf-8");
-  users = JSON.parse(data);
-  console.log("✅ Users loaded successfully");
-} catch (err) {
-  console.error("❌ Error reading users.json:", err.message);
-  users = [];
+  return JSON.parse(data);
 }
 
 // Login route
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
+  const users = loadUsers();
 
-  console.log("⬇️ Login Attempt");
-  console.log("👉 Received Username:", username);
-  console.log("👉 Received Password:", password);
-
-  const trimmedUsername = username.trim();
-  const trimmedPassword = password.trim();
-
-  const user = users.find((u) => u.username === trimmedUsername);
-
+  const user = users.find(u => u.username === username);
   if (!user) {
     console.log("❌ User not found");
-    return res.send("❌ Invalid username or password.");
+    return res.status(401).send("Invalid username or password");
   }
 
-  const match = await bcrypt.compare(trimmedPassword, user.password);
-
+  const match = await bcrypt.compare(password, user.password);
   if (match) {
-    console.log("✅ Login successful for:", trimmedUsername);
+    console.log("✅ Password match");
     return res.sendFile(path.join(__dirname, "dashboard.html"));
   } else {
-    console.log("❌ Incorrect password for:", trimmedUsername);
-    return res.send("❌ Invalid username or password.");
+    console.log("❌ Password incorrect");
+    return res.status(401).send("Invalid username or password");
   }
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server is running at http://localhost:${PORT}`);
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
