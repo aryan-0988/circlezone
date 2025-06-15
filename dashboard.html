@@ -2,109 +2,114 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CircleZone Dashboard</title>
   
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #1a1a1a;
-      color: #fff;
-      padding: 20px;
-    }
-
-    h1 {
-      color: #00ffcc;
-      text-align: center;
-    }
-
-    #linkContainer {
-      margin-top: 20px;
-    }
-
-    .link-item {
-      background: #2c2c2c;
-      margin-bottom: 10px;
-      padding: 10px;
-      border-radius: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .link-item a {
-      color: #00ffff;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .link-item button {
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-      margin-left: 8px;
-      color: #ffcc00;
-    }
-
-    form {
-      margin-top: 30px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    input[type="text"],
-    input[type="url"] {
-      padding: 10px;
-      border-radius: 5px;
-      border: none;
-      outline: none;
-    }
-
-    button[type="submit"],
-    #logoutBtn {
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      background: #00ffcc;
-      color: #000;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.3s;
-    }
-
-    button[type="submit"]:hover,
-    #logoutBtn:hover {
-      background: #00ccaa;
-    }
-
-    #logoutBtn {
-      margin-top: 20px;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
-  </style>
 </head>
+<style>
+  /* General reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body styling */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(to right, #4b6cb7, #182848);
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Dashboard container */
+.dashboard-container {
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 40px;
+  border-radius: 20px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Heading */
+.dashboard-container h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.dashboard-container p {
+  margin-bottom: 25px;
+  font-size: 1rem;
+  color: #ccc;
+}
+
+/* Links */
+.links h2 {
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+}
+
+.links ul {
+  list-style: none;
+  padding: 0;
+}
+
+.links li {
+  margin: 10px 0;
+}
+
+.links a {
+  color: #00ffff;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.1rem;
+  transition: color 0.3s ease;
+}
+
+.links a:hover {
+  color: #ffcc00;
+}
+
+/* Logout link */
+.logout {
+  margin-top: 30px;
+}
+
+.logout a {
+  color: #ff4d4d;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.logout a:hover {
+  color: #ffffff;
+}
+
+</style>
 <body>
-  <h1>🔗 Welcome to Your Dashboard</h1>
+  <div class="dashboard-container">
+    <h1>🎉 Welcome to CircleZone</h1>
+    <p>Manually managed links below. Edit this file to add/remove your own links.</p>
 
-  <div id="linkContainer">
-    <!-- Links will be loaded here -->
+    <div class="links">
+      <h2>🔗 Your Links</h2>
+      <ul>
+        <li><a href="https://www.google.com" target="_blank">Google</a></li>
+        <li><a href="https://www.youtube.com" target="_blank">YouTube</a></li>
+        <li><a href="https://github.com" target="_blank">GitHub</a></li>
+        <li><a href="https://chat.openai.com" target="_blank">ChatGPT</a></li>
+      </ul>
+    </div>
+
+    <div class="logout">
+      <a href="/logout">🚪 Logout</a>
+    </div>
   </div>
-
-  <form id="addLinkForm">
-    <input type="text" name="name" placeholder="Link Name" required />
-    <input type="url" name="url" placeholder="https://example.com" required />
-    <button type="submit">Add Link</button>
-  </form>
-
-  <button id="logoutBtn">Logout</button>
-
-  <script src="dashhboard.js"></script>
 </body>
 </html>
