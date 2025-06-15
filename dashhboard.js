@@ -1,34 +1,34 @@
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("✅ dashboard.js loaded");
+  console.log("📂 dashboard.js loaded");
 
   const linkContainer = document.getElementById("linkContainer");
   const addForm = document.getElementById("addLinkForm");
 
-  // Load links
+  // Load links on page load
+  loadLinks();
+
   async function loadLinks() {
     try {
-      const res = await fetch("/api/links", { credentials: "include" });
-      if (!res.ok) throw new Error("User not logged in.");
-      const links = await res.json();
+      const res = await fetch("/links", { credentials: "include" });
+      const data = await res.json();
 
-      linkContainer.innerHTML = "";
+      linkContainer.innerHTML = ""; // Clear existing links
 
-      if (links.length === 0) {
-        linkContainer.innerHTML = "<p>No links yet.</p>";
-      } else {
-        links.forEach((link) => {
-          const a = document.createElement("a");
-          a.href = link.url;
-          a.target = "_blank";
-          a.rel = "noopener noreferrer";
-          a.innerHTML = `<i class="fa fa-link"></i> ${link.title}`;
-          a.className = "link-item";
-          linkContainer.appendChild(a);
-        });
-      }
+      data.links.forEach((link, index) => {
+        const div = document.createElement("div");
+        div.className = "link-item";
+
+        div.innerHTML = `
+          <a href="${link.url}" target="_blank">${link.name}</a>
+          <button data-action="edit" data-index="${index}">✏️</button>
+          <button data-action="delete" data-index="${index}">🗑️</button>
+        `;
+
+        linkContainer.appendChild(div);
+      });
     } catch (err) {
-      console.error("❌ Error loading links:", err);
-      linkContainer.innerHTML = "<p style='color: red;'>⚠️ You must log in first.</p>";
+      console.error("❌ Failed to load links:", err);
+      linkContainer.innerHTML = "<p>⚠️ Could not load links.</p>";
     }
   }
 
@@ -36,37 +36,73 @@ document.addEventListener("DOMContentLoaded", () => {
   if (addForm) {
     addForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const title = addForm.elements["title"].value.trim();
+
+      const name = addForm.elements["name"].value.trim();
       const url = addForm.elements["url"].value.trim();
 
-      if (!title || !url) {
-        alert("Please enter both title and URL.");
-        return;
-      }
+      if (!name || !url) return alert("Please fill in both fields.");
 
       try {
-        const res = await fetch("/api/links", {
+        const res = await fetch("/links", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ title, url })
+          body: JSON.stringify({ name, url }),
         });
 
-        const data = await res.json();
         if (res.ok) {
-          console.log("✅ Link added:", data);
           addForm.reset();
           loadLinks();
         } else {
-          alert("❌ Failed to add link: " + data.message);
+          alert("Failed to add link");
         }
       } catch (err) {
-        console.error("❌ Error adding link:", err);
+        console.error("❌ Add link error:", err);
       }
     });
   }
 
-  loadLinks(); // Load on page load
+  // Edit or delete (event delegation)
+  linkContainer.addEventListener("click", async (e) => {
+    const action = e.target.dataset.action;
+    const index = e.target.dataset.index;
+
+    if (!action || index === undefined) return;
+
+    if (action === "delete") {
+      if (!confirm("Delete this link?")) return;
+
+      await fetch(`/links/${index}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+
+      loadLinks();
+    }
+
+    if (action === "edit") {
+      const newName = prompt("Enter new name:");
+      const newUrl = prompt("Enter new URL:");
+
+      if (!newName || !newUrl) return;
+
+      await fetch(`/links/${index}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name: newName, url: newUrl }),
+      });
+
+      loadLinks();
+    }
+  });
+
+  // Logout
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      await fetch("/logout", { credentials: "include" });
+      window.location.href = "/";
+    });
+  }
 });

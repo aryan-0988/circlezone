@@ -1,67 +1,66 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ script.js loaded");
 
   const form = document.getElementById("loginForm");
+  const toggle = document.getElementById("togglePassword");
 
+  // Handle login form submit
   if (form) {
-    form.addEventListener("submit", async function (e) {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const formData = new FormData(form);
       const username = formData.get("username").trim();
       const password = formData.get("password").trim();
 
-      console.log("📨 Submitting login:", username);
+      console.log("📨 Logging in:", username);
 
       try {
         const res = await fetch("/login", {
           method: "POST",
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/x-www-form-urlencoded",
           },
-          body: new URLSearchParams(formData),
-          credentials: "include"
+          body: new URLSearchParams({ username, password }),
+          credentials: "include",
         });
 
         const contentType = res.headers.get("content-type");
 
-        if (res.ok && contentType && contentType.includes("application/json")) {
-          const data = await res.json();
-          if (data.success) {
-            console.log("📩 Login success. Redirecting...");
-            window.location.href = "/dashboard"; // ✅ Correct redirection
-          } else {
-            throw new Error(data.error || "Login failed");
-          }
+        if (res.ok && contentType && contentType.includes("text/html")) {
+          const html = await res.text();
+          document.open();
+          document.write(html);
+          document.close();
         } else {
-          const msg = document.getElementById("message");
-          const errorText = await res.text();
-          if (msg) {
-            msg.innerText = errorText || "Login failed.";
-            msg.style.color = "red";
-          }
+          const msg = await res.text();
+          showMessage(msg, "red");
         }
       } catch (err) {
-        console.error("❌ Network/server error:", err);
-        const msg = document.getElementById("message");
-        if (msg) {
-          msg.innerText = "⚠️ Server error. Please try again.";
-          msg.style.color = "red";
-        }
+        console.error("❌ Server/network error:", err);
+        showMessage("⚠️ Server error. Try again.", "red");
       }
     });
   }
 
-  // Toggle password visibility (optional)
-  const toggle = document.getElementById("togglePassword");
+  // Password visibility toggle
   if (toggle) {
-    toggle.addEventListener("click", function () {
-      const passwordField = document.querySelector("input[name='password']");
-      if (!passwordField) return;
+    toggle.addEventListener("click", () => {
+      const passwordInput = document.querySelector("input[name='password']");
+      if (!passwordInput) return;
 
-      const type = passwordField.getAttribute("type") === "password" ? "text" : "password";
-      passwordField.setAttribute("type", type);
-      toggle.innerText = type === "password" ? "Show Password" : "Hide Password";
+      const isPassword = passwordInput.getAttribute("type") === "password";
+      passwordInput.setAttribute("type", isPassword ? "text" : "password");
+      toggle.textContent = isPassword ? "Hide Password" : "Show Password";
     });
+  }
+
+  // Helper: show error message
+  function showMessage(message, color = "red") {
+    const msg = document.getElementById("message");
+    if (msg) {
+      msg.innerText = message;
+      msg.style.color = color;
+    }
   }
 });
