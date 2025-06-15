@@ -18,11 +18,10 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       const res = await fetch("/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ username, password }),
+        body: new URLSearchParams(formData),
+        credentials: "include" // <--- add this line
       });
+
 
       const text = await res.text();
       console.log("📩 Server response received");
