@@ -19,7 +19,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // Set to true if using HTTPS (Render uses HTTPS, so you *could* set this to true later if needed)
+    secure: true, // ✅ Safe to use on Render because it uses HTTPS
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 1 day
   }
