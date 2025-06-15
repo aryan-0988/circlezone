@@ -81,6 +81,18 @@ app.post("/api/links", (req, res) => {
   fs.writeFileSync(LINKS_FILE, JSON.stringify(links, null, 2));
   res.status(200).json({ message: "✅ Link added successfully" });
 });
+// API: Delete a link by index
+app.delete("/api/links/:index", (req, res) => {
+  const index = parseInt(req.params.index);
+  const links = JSON.parse(fs.readFileSync(LINKS_FILE, "utf-8"));
+  if (index >= 0 && index < links.length) {
+    links.splice(index, 1);
+    fs.writeFileSync(LINKS_FILE, JSON.stringify(links, null, 2));
+    return res.status(200).json({ message: "✅ Link deleted" });
+  }
+  res.status(400).json({ message: "❌ Invalid index" });
+});
+
 
 // Start server
 app.listen(PORT, () => {

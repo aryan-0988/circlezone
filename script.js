@@ -1,60 +1,96 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ script.js loaded");
 
   const form = document.getElementById("loginForm");
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-  form.addEventListener("submit", async function (e) {
-    e.preventDefault();
+      const formData = new FormData(form);
+      const username = formData.get("username").trim();
+      const password = formData.get("password").trim();
 
-    const formData = new FormData(form);
-    const username = formData.get("username").trim();
-    const password = formData.get("password").trim();
+      console.log("📨 Login attempt:", username);
 
-    // Log submitted values for debugging
-    console.log("📨 Submitting login:");
-    console.log("Username:", username);
-    console.log("Password:", password);
+      try {
+        const res = await fetch("/login", {
+          method: "POST",
+          body: new URLSearchParams(formData),
+          credentials: "include"
+        });
 
-    try {
-      const res = await fetch("/login", {
-        method: "POST",
-        body: new URLSearchParams(formData),
-        credentials: "include" // <--- add this line
-      });
+        const text = await res.text();
 
-
-      const text = await res.text();
-      console.log("📩 Server response received");
-
-      if (text.includes("<!DOCTYPE html>")) {
-        // If response is HTML (dashboard), load it
-        document.open();
-        document.write(text);
-        document.close();
-      } else {
-        // Show error message if not HTML
-        const msg = document.getElementById("message");
-        msg.innerText = text;
-        msg.style.color = "red";
+        if (text.includes("<!DOCTYPE html>")) {
+          document.open();
+          document.write(text);
+          document.close();
+        } else {
+          const msg = document.getElementById("message");
+          msg.innerText = text;
+          msg.style.color = "red";
+        }
+      } catch (err) {
+        console.error("❌ Error:", err);
       }
-    } catch (err) {
-      console.error("❌ Fetch error:", err);
-      const msg = document.getElementById("message");
-      msg.innerText = "Server error. Please try again.";
-      msg.style.color = "red";
-    }
-  });
-
-  // Toggle password visibility
-  const toggle = document.getElementById("togglePassword");
-  if (toggle) {
-    toggle.addEventListener("click", function () {
-      const passwordField = document.querySelector("input[name='password']");
-      const type =
-        passwordField.getAttribute("type") === "password" ? "text" : "password";
-      passwordField.setAttribute("type", type);
-      toggle.nextElementSibling.innerText =
-        type === "password" ? "Show Password" : "Hide Password";
     });
   }
+
+  // Dashboard logic
+  const linkForm = document.getElementById("linkForm");
+  const linksContainer = document.getElementById("links");
+
+  async function loadLinks() {
+    try {
+      const res = await fetch("/api/links", { credentials: "include" });
+      if (!res.ok) throw new Error("User not logged in.");
+      const links = await res.json();
+      linksContainer.innerHTML = links
+        .map(
+          (link, i) => `
+          <div>
+            <a href="${link.url}" target="_blank">${link.title}</a>
+            <button data-index="${i}" class="delete-btn">❌</button>
+          </div>`
+        )
+        .join("");
+    } catch (err) {
+      linksContainer.innerHTML = "<p>⚠️ You must log in first.</p>";
+    }
+  }
+
+  if (linksContainer) loadLinks();
+
+  if (linkForm) {
+    linkForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = linkForm.title.value.trim();
+      const url = linkForm.url.value.trim();
+
+      if (!title || !url) return alert("Both fields required!");
+
+      const res = await fetch("/api/links", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ title, url }),
+      });
+
+      const data = await res.json();
+      alert(data.message);
+      loadLinks();
+      linkForm.reset();
+    });
+  }
+
+  document.addEventListener("click", async (e) => {
+    if (e.target.classList.contains("delete-btn")) {
+      const index = e.target.getAttribute("data-index");
+      await fetch(`/api/links/${index}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      loadLinks();
+    }
+  });
 });
