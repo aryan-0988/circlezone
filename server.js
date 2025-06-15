@@ -9,7 +9,9 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public"))); // Serve script.js, style.css
+// --- CHANGE THIS LINE ---
+app.use(express.static(path.join(__dirname))); // Serve static files from the root directory
+// ------------------------
 
 // Session setup
 app.use(session({
@@ -17,7 +19,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // Set to true if using HTTPS
+    secure: false, // Set to true if using HTTPS (Render uses HTTPS, so you *could* set this to true later if needed)
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 1 day
   }
@@ -25,13 +27,16 @@ app.use(session({
 
 // Load user data
 const users = JSON.parse(fs.readFileSync("users.json", "utf-8")); // { "username": "hashed_password", ... }
+console.log("✅ Users loaded successfully"); // Add this to confirm users.json is read
 
 // Serve index.html
 app.get("/", (req, res) => {
   if (req.session.user) {
     return res.redirect("/dashboard");
   }
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  // --- CHANGE THIS LINE ---
+  res.sendFile(path.join(__dirname, "index.html"));
+  // ------------------------
 });
 
 // Handle login
@@ -48,7 +53,9 @@ app.post("/login", async (req, res) => {
   if (match) {
     req.session.user = username;
     console.log(`✅ ${username} logged in`);
-    return res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+    // --- CHANGE THIS LINE ---
+    return res.sendFile(path.join(__dirname, "dashboard.html"));
+    // ------------------------
   } else {
     return res.status(401).send("❌ Invalid username or password");
   }
@@ -59,7 +66,9 @@ app.get("/dashboard", (req, res) => {
   if (!req.session.user) {
     return res.send("⚠️ You must log in first.");
   }
-  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+  // --- CHANGE THIS LINE ---
+  res.sendFile(path.join(__dirname, "dashboard.html"));
+  // ------------------------
 });
 
 // Logout
@@ -71,5 +80,5 @@ app.get("/logout", (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server is running at http://localhost:${PORT}`);
 });
