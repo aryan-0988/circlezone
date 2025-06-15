@@ -1,100 +1,78 @@
 const express = require("express");
-const fs = require("fs");
-const bcrypt = require("bcrypt");
-const path = require("path");
 const session = require("express-session");
-
+const bcrypt = require("bcrypt");
+const fs = require("fs");
+const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static("public")); // Make sure your static files (HTML, CSS, JS) are in /public
 
-app.use(
-  session({
-    secret: "circlezone-secret",
+// ✅ Session Middleware
+app.use(session({
+    secret: "circlezone_secret_key",
     resave: false,
-    saveUninitialized: false, // Prevents saving empty sessions
+    saveUninitialized: false,
     cookie: {
-      sameSite: "none", // or "lax" if not using HTTPS
-      secure: true      // must be true on HTTPS (e.g., Render)
+        secure: true,           // true for HTTPS (Render uses HTTPS)
+        httpOnly: true,
+        sameSite: "none",       // Required for cross-origin cookies
+        maxAge: 1000 * 60 * 60 * 24 // 1 day
     }
-  })
-);
+}));
 
-// File paths
-const USERS_FILE = path.join(__dirname, "users.json");
-const LINKS_FILE = path.join(__dirname, "links.json");
-
-// Routes
-
-// Login Page
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+// ✅ Allow CORS with credentials (if frontend hosted separately)
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "https://circlezone.onrender.com");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET,POST");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
+    next();
 });
 
-// Handle login
-app.post("/login", (req, res) => {
-  const { username, password } = req.body;
-  const users = JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
+// ✅ Login Endpoint
+app.post("/login", async (req, res) => {
+    const { username, password } = req.body;
 
-  const user = users.find((u) => u.username === username);
-  if (!user) return res.send("❌ Invalid username");
+    const users = JSON.parse(fs.readFileSync("users.json", "utf-8"));
+    const user = users.find(u => u.username === username);
 
-  bcrypt.compare(password, user.password, (err, result) => {
-    if (result) {
-      req.session.user = username;
-      res.sendFile(path.join(__dirname, "dashboard.html"));
-    } else {
-      res.send("❌ Incorrect password");
+    if (!user) {
+        return res.status(401).json({ error: "User not found" });
     }
-  });
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+        return res.status(401).json({ error: "Incorrect password" });
+    }
+
+    req.session.user = username; // ✅ Set session
+    res.json({ success: true });
 });
 
-// Dashboard (must be logged in)
+// ✅ Dashboard Page (Protected)
 app.get("/dashboard", (req, res) => {
-  if (!req.session.user) return res.redirect("/");
-  res.sendFile(path.join(__dirname, "dashboard.html"));
+    if (!req.session.user) {
+        return res.send("<!DOCTYPE html><h1>⚠️ You must log in first.</h1>");
+    }
+
+    res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
 
-// API: Get links (must be logged in)
-app.get("/api/links", (req, res) => {
-  if (!req.session.user) return res.status(401).json({ message: "Unauthorized" });
-
-  const links = JSON.parse(fs.readFileSync(LINKS_FILE, "utf-8"));
-  res.json(links);
+// ✅ Logout
+app.get("/logout", (req, res) => {
+    req.session.destroy(() => {
+        res.redirect("/");
+    });
 });
 
-// API: Add new link (must be logged in)
-app.post("/api/links", (req, res) => {
-  if (!req.session.user) return res.status(401).json({ message: "Unauthorized" });
-
-  const { title, url } = req.body;
-  if (!title || !url) {
-    return res.status(400).json({ message: "Title and URL are required." });
-  }
-
-  const links = JSON.parse(fs.readFileSync(LINKS_FILE, "utf-8"));
-  links.push({ title, url });
-  fs.writeFileSync(LINKS_FILE, JSON.stringify(links, null, 2));
-  res.status(200).json({ message: "✅ Link added successfully" });
-});
-// API: Delete a link by index
-app.delete("/api/links/:index", (req, res) => {
-  const index = parseInt(req.params.index);
-  const links = JSON.parse(fs.readFileSync(LINKS_FILE, "utf-8"));
-  if (index >= 0 && index < links.length) {
-    links.splice(index, 1);
-    fs.writeFileSync(LINKS_FILE, JSON.stringify(links, null, 2));
-    return res.status(200).json({ message: "✅ Link deleted" });
-  }
-  res.status(400).json({ message: "❌ Invalid index" });
+// ✅ Homepage
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-
-// Start server
 app.listen(PORT, () => {
-  console.log(`🚀 CircleZone server running at http://localhost:${PORT}`);
+    console.log(`✅ Server running on port ${PORT}`);
 });
