@@ -1,46 +1,72 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const linksContainer = document.getElementById("links");
-  const addForm = document.getElementById("addForm");
+  console.log("✅ dashboard.js loaded");
 
-  // Fetch and display links
-  fetch("/api/links")
-    .then(res => res.json())
-    .then(data => {
-      data.forEach(link => {
-        const a = document.createElement("a");
-        a.href = link.url;
-        a.target = "_blank";
-        a.innerHTML = `🔗 ${link.title}`;
-        linksContainer.appendChild(a);
-      });
-    });
+  const linkContainer = document.getElementById("linkContainer");
+  const addForm = document.getElementById("addLinkForm");
+
+  // Load links
+  async function loadLinks() {
+    try {
+      const res = await fetch("/api/links", { credentials: "include" });
+      if (!res.ok) throw new Error("User not logged in.");
+      const links = await res.json();
+
+      linkContainer.innerHTML = "";
+
+      if (links.length === 0) {
+        linkContainer.innerHTML = "<p>No links yet.</p>";
+      } else {
+        links.forEach((link) => {
+          const a = document.createElement("a");
+          a.href = link.url;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.innerHTML = `<i class="fa fa-link"></i> ${link.title}`;
+          a.className = "link-item";
+          linkContainer.appendChild(a);
+        });
+      }
+    } catch (err) {
+      console.error("❌ Error loading links:", err);
+      linkContainer.innerHTML = "<p style='color: red;'>⚠️ You must log in first.</p>";
+    }
+  }
 
   // Add new link
-  addForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  if (addForm) {
+    addForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = addForm.elements["title"].value.trim();
+      const url = addForm.elements["url"].value.trim();
 
-    const formData = new FormData(addForm);
-    const newLink = {
-      title: formData.get("title"),
-      url: formData.get("url"),
-    };
+      if (!title || !url) {
+        alert("Please enter both title and URL.");
+        return;
+      }
 
-    const res = await fetch("/api/links", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newLink)
+      try {
+        const res = await fetch("/api/links", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify({ title, url })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          console.log("✅ Link added:", data);
+          addForm.reset();
+          loadLinks();
+        } else {
+          alert("❌ Failed to add link: " + data.message);
+        }
+      } catch (err) {
+        console.error("❌ Error adding link:", err);
+      }
     });
+  }
 
-    if (res.ok) {
-      // Add new link to UI
-      const a = document.createElement("a");
-      a.href = newLink.url;
-      a.target = "_blank";
-      a.innerHTML = `🔗 ${newLink.title}`;
-      linksContainer.appendChild(a);
-      addForm.reset();
-    } else {
-      alert("Failed to add link.");
-    }
-  });
+  loadLinks(); // Load on page load
 });

@@ -22,14 +22,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const text = await res.text();
 
         if (text.includes("<!DOCTYPE html>")) {
-          document.open();
-          document.write(text);
-          document.close();
+          window.location.href = "/dashboard";
         } else {
           const msg = document.getElementById("message");
           msg.innerText = text;
           msg.style.color = "red";
         }
+
       } catch (err) {
         console.error("❌ Error:", err);
       }
