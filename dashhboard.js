@@ -1,56 +1,46 @@
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
-const bodyParser = require("body-parser");
+document.addEventListener("DOMContentLoaded", () => {
+  const linksContainer = document.getElementById("links");
+  const addForm = document.getElementById("addForm");
 
-const app = express();
-const PORT = 3001; // Run this on a different port if needed
+  // Fetch and display links
+  fetch("/api/links")
+    .then(res => res.json())
+    .then(data => {
+      data.forEach(link => {
+        const a = document.createElement("a");
+        a.href = link.url;
+        a.target = "_blank";
+        a.innerHTML = `🔗 ${link.title}`;
+        linksContainer.appendChild(a);
+      });
+    });
 
-app.use(bodyParser.json());
-app.use(express.static("public")); // Serve static files like dashboard.html
+  // Add new link
+  addForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-const linksPath = path.join(__dirname, "links.json");
+    const formData = new FormData(addForm);
+    const newLink = {
+      title: formData.get("title"),
+      url: formData.get("url"),
+    };
 
-// Helper: Read links
-function getLinks() {
-  try {
-    const data = fs.readFileSync(linksPath, "utf-8");
-    return JSON.parse(data);
-  } catch (err) {
-    console.error("Error reading links.json:", err);
-    return {};
-  }
-}
+    const res = await fetch("/api/links", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newLink)
+    });
 
-// Helper: Save links
-function saveLinks(data) {
-  fs.writeFileSync(linksPath, JSON.stringify(data, null, 2), "utf-8");
-}
-
-// GET user links
-app.get("/api/links/:username", (req, res) => {
-  const { username } = req.params;
-  const allLinks = getLinks();
-  const userLinks = allLinks[username] || [];
-  res.json(userLinks);
-});
-
-// POST add new link
-app.post("/api/links/:username", (req, res) => {
-  const { username } = req.params;
-  const { title, url } = req.body;
-
-  if (!title || !url) return res.status(400).send("Missing title or url");
-
-  const allLinks = getLinks();
-  if (!allLinks[username]) allLinks[username] = [];
-
-  allLinks[username].push({ title, url });
-  saveLinks(allLinks);
-  res.sendStatus(200);
-});
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`Dashboard server running at http://localhost:${PORT}`);
+    if (res.ok) {
+      // Add new link to UI
+      const a = document.createElement("a");
+      a.href = newLink.url;
+      a.target = "_blank";
+      a.innerHTML = `🔗 ${newLink.title}`;
+      linksContainer.appendChild(a);
+      addForm.reset();
+    } else {
+      alert("Failed to add link.");
+    }
+  });
 });

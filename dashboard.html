@@ -1,115 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard | CircleZone</title>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="/style.css">
   <style>
     body {
-      background: #1d1f27;
-      color: #fff;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      text-align: center;
-      padding: 60px 20px;
+      background-color: #1f1f2e;
+      color: #00ffe7;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
     }
+
     h1 {
-      color: #00ffde;
-      font-size: 36px;
-      margin-bottom: 20px;
+      color: cyan;
+      margin-bottom: 10px;
     }
-    .link-list a {
-      display: block;
-      color: #00ffde;
+
+    #links a {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       text-decoration: none;
+      color: #00ffe7;
       font-weight: bold;
-      margin: 10px 0;
+      margin: 5px 0;
     }
-    .link-list a:hover {
-      color: #00bfa6;
+
+    #addForm {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
-    form {
-      margin-top: 40px;
-    }
-    input[type="text"] {
+
+    #addForm input, #addForm button {
       padding: 8px;
-      width: 200px;
-      margin: 5px;
-      border-radius: 6px;
+      border-radius: 5px;
       border: none;
     }
-    button {
-      padding: 8px 16px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 6px;
-      background-color: #00ffde;
-      color: #000;
-      font-weight: bold;
+
+    #addForm button {
+      background-color: cyan;
+      color: black;
       cursor: pointer;
-    }
-    button:hover {
-      background-color: #00bfa6;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
   <h1>Welcome to CircleZone!</h1>
-  <p>Here are your links:</p>
-  <div class="link-list" id="linkList"></div>
+  <p>You have successfully logged in. Choose a link below:</p>
+  <div id="links"></div>
 
-  <form id="addLinkForm">
-    <input type="text" id="title" placeholder="Title" required />
-    <input type="text" id="url" placeholder="URL (https://...)" required />
-    <br />
+  <form id="addForm">
+    <input type="text" name="title" placeholder="Link Title" required />
+    <input type="url" name="url" placeholder="Link URL" required />
     <button type="submit">Add Link</button>
   </form>
 
-  <script>
-    // Get current username from sessionStorage (set during login)
-    const username = sessionStorage.getItem('loggedInUser');
-
-    if (!username) {
-      document.body.innerHTML = "<h2>⚠️ You must log in first.</h2>";
-      throw new Error("User not logged in.");
-    }
-
-    async function loadLinks() {
-      const res = await fetch(`/links/${username}`);
-      const links = await res.json();
-      const list = document.getElementById("linkList");
-      list.innerHTML = "";
-      links.forEach(link => {
-        const a = document.createElement("a");
-        a.href = link.url;
-        a.target = "_blank";
-        a.innerText = link.title;
-        list.appendChild(a);
-      });
-    }
-
-    document.getElementById("addLinkForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const title = document.getElementById("title").value;
-      const url = document.getElementById("url").value;
-
-      const res = await fetch(`/links/${username}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ title, url })
-      });
-
-      if (res.ok) {
-        document.getElementById("title").value = "";
-        document.getElementById("url").value = "";
-        loadLinks();
-      } else {
-        alert("❌ Failed to add link.");
-      }
-    });
-
-    loadLinks();
-  </script>
+  <script src="/dashboard.js"></script>
 </body>
 </html>
