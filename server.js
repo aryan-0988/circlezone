@@ -11,24 +11,31 @@ const PORT = process.env.PORT || 3000;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(__dirname));
+
 app.use(
   session({
     secret: "circlezone-secret",
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false, // Prevents saving empty sessions
+    cookie: {
+      sameSite: "none", // or "lax" if not using HTTPS
+      secure: true      // must be true on HTTPS (e.g., Render)
+    }
   })
 );
 
-// Load users
+// File paths
 const USERS_FILE = path.join(__dirname, "users.json");
 const LINKS_FILE = path.join(__dirname, "links.json");
 
-// Show login page
+// Routes
+
+// Login Page
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// Handle login POST
+// Handle login
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   const users = JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
@@ -46,20 +53,24 @@ app.post("/login", (req, res) => {
   });
 });
 
-// Serve dashboard
+// Dashboard (must be logged in)
 app.get("/dashboard", (req, res) => {
   if (!req.session.user) return res.redirect("/");
   res.sendFile(path.join(__dirname, "dashboard.html"));
 });
 
-// API: Get all links
+// API: Get links (must be logged in)
 app.get("/api/links", (req, res) => {
+  if (!req.session.user) return res.status(401).json({ message: "Unauthorized" });
+
   const links = JSON.parse(fs.readFileSync(LINKS_FILE, "utf-8"));
   res.json(links);
 });
 
-// API: Add a new link
+// API: Add new link (must be logged in)
 app.post("/api/links", (req, res) => {
+  if (!req.session.user) return res.status(401).json({ message: "Unauthorized" });
+
   const { title, url } = req.body;
   if (!title || !url) {
     return res.status(400).json({ message: "Title and URL are required." });
